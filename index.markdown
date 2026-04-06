@@ -2,7 +2,7 @@
 layout: default
 ---
 
-<div align="center">
+<div align="center" markdown="1">
 
 # Agent-as-Annotators (A3)
 
