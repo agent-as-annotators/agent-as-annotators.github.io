@@ -1,0 +1,6 @@
+title: Agent-as-Annotators
+description: Structured Distillation of Web Agent Capabilities Enables Generalization
+baseurl: ""
+url: "https://agent-as-annotators.github.io"
+plugins:
+  - jekyll-feed
