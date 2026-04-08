@@ -1,0 +1,1020 @@
+---
+layout: none
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent-as-Annotators</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Display:wght@400;500;700&family=Google+Sans+Mono:wght@400;500&family=Google+Sans+Text:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --hero-bg: #0a0a0a;
+  --hero-text: #eaeaea;
+  --surface: #ffffff;
+  --surface-alt: #f8f9f9;
+  --text: #000000;
+  --text-secondary: #333333;
+  --accent: #ED1B2F;
+  --accent-warm: #f25463;
+  --accent-blue: #3b9cba;
+  --border: #e5e5e5;
+  --code-bg: #263238;
+  --serif: 'Google Sans Display', 'Google Sans', 'Noto Sans', Helvetica, sans-serif;
+  --sans: 'Google Sans Text', 'Google Sans', 'Noto Sans', Helvetica, sans-serif;
+  --mono: 'Google Sans Mono', 'Noto Sans Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; font-size: 17px; }
+
+body {
+  font-family: var(--sans);
+  color: var(--text);
+  background: var(--surface);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Reveal animations ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+/* ---- Hero ---- */
+.hero {
+  background: var(--hero-bg);
+  color: var(--hero-text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at 30% 50%, rgba(237, 27, 47, 0.05) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 30%, rgba(59, 130, 246, 0.03) 0%, transparent 50%);
+  animation: heroGlow 20s ease-in-out infinite alternate;
+}
+
+@keyframes heroGlow {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-3%, 2%) scale(1.05); }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 860px;
+}
+
+.hero-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(237, 27, 47, 0.3);
+  padding: 0.35rem 1rem;
+  border-radius: 100px;
+  margin-bottom: 2rem;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.2s forwards;
+}
+
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+  font-weight: 400;
+  line-height: 1.15;
+  margin-bottom: 1.5rem;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.4s forwards;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hero-subtitle {
+  font-size: 1.15rem;
+  color: #9a9aaa;
+  max-width: 640px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.7;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.6s forwards;
+}
+
+.hero-authors {
+  font-size: 1rem;
+  color: #7a7a8a;
+  margin-bottom: 1rem;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.7s forwards;
+}
+
+.hero-authors a {
+  color: var(--hero-text);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(232, 230, 225, 0.3);
+  transition: border-color 0.3s;
+}
+
+.hero-authors a:hover { border-color: var(--accent); }
+
+.hero-affiliation {
+  font-size: 0.9rem;
+  color: #5a5a6a;
+  margin-bottom: 2.5rem;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.8s forwards;
+}
+
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+  from { transform: translateY(20px); }
+}
+
+/* ---- Stats bar ---- */
+.hero-stats {
+  display: flex;
+  gap: 3rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.9s forwards;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-value {
+  font-family: var(--serif);
+  font-size: 2.8rem;
+  color: var(--accent);
+  line-height: 1;
+  display: block;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6a6a7a;
+  margin-top: 0.4rem;
+  display: block;
+}
+
+/* ---- Nav links ---- */
+.nav-links {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeUp 0.8s 1s forwards;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--hero-text);
+  text-decoration: none;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  transition: all 0.3s;
+  background: rgba(255,255,255,0.03);
+}
+
+.nav-link:hover {
+  border-color: var(--accent);
+  background: rgba(237, 27, 47, 0.06);
+  color: var(--accent);
+}
+
+/* ---- Sections ---- */
+section {
+  padding: 6rem 2rem;
+}
+
+.container {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.container-wide {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1rem;
+  display: block;
+}
+
+h2 {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  font-weight: 400;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+
+h3 {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin-bottom: 1rem;
+  margin-top: 2.5rem;
+}
+
+p {
+  margin-bottom: 1.2rem;
+  color: var(--text-secondary);
+}
+
+p strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ---- Problem section ---- */
+.section-alt {
+  background: var(--surface-alt);
+}
+
+.highlight-box {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem 2.5rem;
+  margin: 2rem 0;
+  position: relative;
+}
+
+.highlight-box::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1.5rem;
+  bottom: 1.5rem;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* ---- Pipeline section ---- */
+.pipeline-header {
+  display: grid;
+  grid-template-columns: 1fr 48px 1fr;
+  gap: 1rem;
+  margin: 2.5rem 0 0.8rem;
+}
+
+.pipeline-row {
+  display: grid;
+  grid-template-columns: 1fr 48px 1fr;
+  gap: 1rem;
+  align-items: stretch;
+  margin-bottom: 1rem;
+}
+
+.pipeline-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--accent);
+}
+
+.pipeline-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.2rem 1.5rem;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pipeline-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 20px rgba(237, 27, 47, 0.08);
+  transform: translateY(-2px);
+}
+
+.pipeline-card-header {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 0.3rem;
+}
+
+.pipeline-card-title {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+}
+
+.pipeline-card p {
+  font-size: 0.88rem;
+  margin-bottom: 0;
+  line-height: 1.55;
+}
+
+.phase-title {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.phase-human { background: #fef3c7; color: #92400e; }
+.phase-llm { background: #fde8ea; color: #9b1220; }
+
+/* ---- Results ---- */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin: 2.5rem 0;
+}
+
+.result-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.result-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.result-benchmark {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin-bottom: 0.8rem;
+}
+
+.result-benchmark .ood-tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 0.1rem 0.5rem;
+  border-radius: 100px;
+  margin-left: 0.3rem;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+}
+
+.result-score {
+  font-family: var(--serif);
+  font-size: 2.4rem;
+  color: var(--text);
+  line-height: 1;
+}
+
+.result-score span {
+  font-size: 1.4rem;
+  color: var(--text-secondary);
+}
+
+.result-delta {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #16a34a;
+  margin-top: 0.5rem;
+  padding: 0.15rem 0.6rem;
+  background: rgba(22, 163, 74, 0.08);
+  border-radius: 100px;
+}
+
+/* ---- Bar chart ---- */
+.bar-group {
+  margin: 2rem 0;
+}
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+}
+
+.bar-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  width: 160px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.bar-track {
+  flex: 1;
+  height: 28px;
+  background: var(--surface-alt);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: white;
+}
+
+.bar-fill.animated { width: var(--target-width); }
+
+.bar-ours { background: linear-gradient(90deg, #b91c2e, #ED1B2F); }
+.bar-base { background: #94a3b8; }
+.bar-gpt { background: #6366f1; }
+.bar-claude { background: #f97316; }
+.bar-gemini { background: #3b82f6; }
+
+/* ---- Code blocks ---- */
+.code-block {
+  background: var(--code-bg);
+  border-radius: 10px;
+  padding: 1.5rem 1.8rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+.code-block code {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: #cdd6f4;
+  white-space: pre;
+  display: block;
+}
+
+.code-block .comment { color: #6c7086; }
+.code-block .keyword { color: #cba6f7; }
+.code-block .string { color: #a6e3a1; }
+.code-block .function { color: #89b4fa; }
+.code-block .flag { color: #f9e2af; }
+
+.code-label {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #585b70;
+}
+
+/* ---- Resources grid ---- */
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.resource-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.resource-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  transform: translateY(-2px);
+}
+
+.resource-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.resource-title {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+}
+
+.resource-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ---- Citation ---- */
+.citation-block {
+  background: var(--code-bg);
+  border-radius: 10px;
+  padding: 1.5rem 1.8rem;
+  overflow-x: auto;
+  position: relative;
+}
+
+.citation-block code {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: #cdd6f4;
+  white-space: pre;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #9a9aaa;
+  padding: 0.3rem 0.7rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copy-btn:hover { background: rgba(255,255,255,0.12); color: #cdd6f4; }
+
+/* ---- Footer ---- */
+footer {
+  padding: 3rem 2rem;
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
+
+footer p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+footer a {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  transition: border-color 0.3s;
+}
+
+footer a:hover { border-color: var(--accent); }
+
+/* ---- Divider ---- */
+.divider {
+  width: 48px;
+  height: 2px;
+  background: var(--accent);
+  margin: 3rem auto;
+  border-radius: 1px;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  section { padding: 4rem 1.5rem; }
+  .hero { padding: 3rem 1.5rem; }
+  .hero-stats { gap: 1.5rem; }
+  .stat-value { font-size: 2rem; }
+  .pipeline-header,
+  .pipeline-row {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+  .pipeline-arrow {
+    transform: rotate(90deg);
+  }
+  .bar-label { width: 100px; font-size: 0.75rem; }
+  .results-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">Preprint 2026</div>
+    <h1>Structured Distillation of Web Agent Capabilities <em>Enables Generalization</em></h1>
+    <p class="hero-subtitle">Agent-as-Annotators replaces human annotation roles with LLM modules to synthesize web agent training data. A 9B model trained on 2,322 trajectories matches Qwen3.5-27B and nearly doubles the previous best open-weight result.</p>
+    <p class="hero-authors">
+      <a href="https://xinghanlu.com">Xing Han Lù</a> &nbsp;&middot;&nbsp;
+      <a href="https://sivareddy.in">Siva Reddy</a>
+    </p>
+    <p class="hero-affiliation">McGill University &amp; Mila</p>
+
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-value" data-count="41.5">0</span>
+        <span class="stat-label">WebArena SR%</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" data-count="18.2" data-prefix="+">0</span>
+        <span class="stat-label">WorkArena L1 gain</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" data-count="2322">0</span>
+        <span class="stat-label">Training trajectories</span>
+      </div>
+    </div>
+
+    <nav class="nav-links">
+      <a class="nav-link" href="https://arxiv.org/abs/TODO">📄 Paper</a>
+      <a class="nav-link" href="https://github.com/McGill-NLP/agent-as-annotators">💾 Code</a>
+      <a class="nav-link" href="https://huggingface.co/datasets/McGill-NLP/A3-Synth">🤗 Dataset</a>
+      <a class="nav-link" href="https://huggingface.co/McGill-NLP/A3-Qwen3.5-9B">🤖 Model</a>
+      <a class="nav-link" href="https://pypi.org/project/agent-as-annotators/">📦 PyPI</a>
+    </nav>
+  </div>
+</section>
+
+<!-- ============ PROBLEM ============ -->
+<section>
+  <div class="container">
+    <div class="reveal">
+      <span class="section-label">The Problem</span>
+      <h2>Frontier models are powerful but impractical</h2>
+      <p>Large language models can now complete complex web tasks, from filling forms, querying databases, managing content across applications. On WebArena, frontier models exceed 50% success rate. But they require <strong>expensive API access</strong>, transmit user data to third-party servers, and <strong>cannot be run locally</strong>.</p>
+      <p>Small open-weight models (~9B parameters) are an attractive alternative, but trail frontier models by over <strong>22 percentage points</strong> on WebArena. How do we close this gap?</p>
+    </div>
+
+    <div class="highlight-box reveal reveal-delay-1">
+      <p style="margin:0; color: var(--text);"><strong>Key insight:</strong> We can use a frontier model as a <em>teacher</em> to generate training trajectories for a smaller <em>student</em>, but the synthesis pipeline needs structure. We draw inspiration from how humans create web agent benchmarks.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FRAMEWORK ============ -->
+<section class="section-alt">
+  <div class="container-wide">
+    <div class="reveal">
+      <span class="section-label">The Framework</span>
+      <h2>From human annotation to LLM modules</h2>
+      <p>When creating WebArena's evaluation tasks, human contributors played three distinct roles. Agent-as-Annotators replaces each with an LLM module:</p>
+    </div>
+
+    <div class="pipeline-header reveal reveal-delay-1">
+      <div class="phase-title phase-human">Human Roles</div>
+      <div></div>
+      <div class="phase-title phase-llm">LLM Modules</div>
+    </div>
+
+    <div class="pipeline-row reveal reveal-delay-1">
+      <div class="pipeline-card">
+        <div class="pipeline-card-header">Role 1</div>
+        <div class="pipeline-card-title">Task Designer</div>
+        <p>Explores the environment, adopts a perspective, and creates tasks with evaluation criteria</p>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-card">
+        <div class="pipeline-card-header">Module 1 &amp; 2</div>
+        <div class="pipeline-card-title">Persona + Task Generator</div>
+        <p>Generates diverse user personas, then synthesizes task intents with evaluation hints grounded in real environment state</p>
+      </div>
+    </div>
+
+    <div class="pipeline-row reveal reveal-delay-2">
+      <div class="pipeline-card">
+        <div class="pipeline-card-header">Role 2</div>
+        <div class="pipeline-card-title">Annotator</div>
+        <p>Receives a task intent and executes it, producing a step-by-step interaction trajectory</p>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-card">
+        <div class="pipeline-card-header">Module 3</div>
+        <div class="pipeline-card-title">Agent</div>
+        <p>Receives only the task intent and interacts with a freshly reset environment. No hints, no exploration data</p>
+      </div>
+    </div>
+
+    <div class="pipeline-row reveal reveal-delay-3">
+      <div class="pipeline-card">
+        <div class="pipeline-card-header">Role 3</div>
+        <div class="pipeline-card-title">Supervisor</div>
+        <p>Reviews the results to verify quality and task completion</p>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-card">
+        <div class="pipeline-card-header">Module 4</div>
+        <div class="pipeline-card-title">Judge</div>
+        <p>Evaluates each trajectory using the interaction record <em>and</em> evaluation hints for reliable success assessment</p>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <p style="text-align: center;">Only trajectories judged successful are used to train the student model.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RESULTS ============ -->
+<section>
+  <div class="container-wide">
+    <div class="reveal">
+      <span class="section-label">Results</span>
+      <h2>A 9B model that matches 27B</h2>
+      <p>A3-Qwen3.5-9B, fine-tuned on just 2,322 filtered trajectories from A3-Synth, achieves <strong>41.5% on WebArena</strong>, matching the 3× larger Qwen3.5-27B, approaching Gemini 3.1 Flash Lite (42.3%), and nearly doubling the previous best open-weight SFT result (Go-Browse, 21.7%).</p>
+    </div>
+
+    <!-- WebArena bar chart -->
+    <div class="bar-group reveal reveal-delay-1">
+      <h3 style="margin-top:0;">WebArena (success rate %)</h3>
+      <div class="bar-row">
+        <span class="bar-label">Gemini 3 Pro <span style="font-size:0.7rem;color:var(--text-secondary);">(teacher)</span></span>
+        <div class="bar-track"><div class="bar-fill bar-gemini" style="--target-width: 92%;">51.2%</div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Gemini 3.1 Flash L.</span>
+        <div class="bar-track"><div class="bar-fill bar-gemini" style="--target-width: 76%;">42.3%</div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label" style="color: var(--accent); font-weight: 700;">A3-Qwen3.5-9B</span>
+        <div class="bar-track"><div class="bar-fill bar-ours" style="--target-width: 75%;">41.5%</div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Qwen3.5-27B <span style="font-size:0.7rem;color:var(--text-secondary);">(3× larger)</span></span>
+        <div class="bar-track"><div class="bar-fill bar-base" style="--target-width: 75%;">41.5%</div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Qwen3.5-9B (base)</span>
+        <div class="bar-track"><div class="bar-fill bar-base" style="--target-width: 56%;">31.0%</div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Go-Browse <span style="font-size:0.7rem;color:var(--text-secondary);">(prev. best SFT)</span></span>
+        <div class="bar-track"><div class="bar-fill bar-base" style="--target-width: 39%;">21.7%</div></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="reveal">
+      <h3>Transfer to unseen benchmarks</h3>
+      <p>The model was trained only on WebArena environments, yet capabilities transfer broadly. Four out of five evaluation benchmarks are completely out-of-distribution.</p>
+    </div>
+
+    <div class="results-grid reveal reveal-delay-1">
+      <div class="result-card">
+        <div class="result-benchmark">WebArena</div>
+        <div class="result-score"><span class="result-counter" data-count="41.5">0</span><span>%</span></div>
+        <div class="result-delta">+10.5pp</div>
+      </div>
+      <div class="result-card">
+        <div class="result-benchmark">VisualWebArena <span class="ood-tag">OOD</span></div>
+        <div class="result-score"><span class="result-counter" data-count="33.9">0</span><span>%</span></div>
+        <div class="result-delta">+5.4pp</div>
+      </div>
+      <div class="result-card">
+        <div class="result-benchmark">WorkArena L1 <span class="ood-tag">OOD</span></div>
+        <div class="result-score"><span class="result-counter" data-count="51.5">0</span><span>%</span></div>
+        <div class="result-delta">+18.2pp</div>
+      </div>
+      <div class="result-card">
+        <div class="result-benchmark">WorkArena++ L2 <span class="ood-tag">OOD</span></div>
+        <div class="result-score"><span class="result-counter" data-count="9.7">0</span><span>%</span></div>
+        <div class="result-delta">+7.5pp</div>
+      </div>
+      <div class="result-card">
+        <div class="result-benchmark">MiniWoB <span class="ood-tag">OOD</span></div>
+        <div class="result-score"><span class="result-counter" data-count="69.0">0</span><span>%</span></div>
+        <div class="result-delta">+5.8pp</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ QUICK START ============ -->
+<section class="section-alt">
+  <div class="container">
+    <div class="reveal">
+      <span class="section-label">Quick Start</span>
+      <h2>Try it yourself</h2>
+    </div>
+
+    <div class="reveal reveal-delay-1">
+      <h3 style="margin-top: 0;">Serve the model</h3>
+      <div class="code-block">
+        <span class="code-label">bash</span>
+        <code><span class="comment"># Install</span>
+pip install agent-as-annotators
+
+<span class="comment"># Serve with vLLM</span>
+vllm serve McGill-NLP/A3-Qwen3.5-9B \
+  <span class="flag">--tensor-parallel-size</span> 2 \
+  <span class="flag">--max-model-len</span> 65536 \
+  <span class="flag">--enforce-eager</span> \
+  <span class="flag">--dtype</span> bfloat16</code>
+      </div>
+    </div>
+
+    <div class="reveal reveal-delay-2">
+      <h3>Run evaluation</h3>
+      <div class="code-block">
+        <span class="code-label">bash</span>
+        <code><span class="comment"># Evaluate on WebArena</span>
+python run_webarena.py \
+  <span class="flag">--benchmark</span> webarena_test \
+  <span class="flag">--model</span> A3-qwen3.5-9b</code>
+      </div>
+    </div>
+
+    <div class="reveal reveal-delay-3">
+      <h3>Download training data</h3>
+      <div class="code-block">
+        <span class="code-label">python</span>
+        <code><span class="keyword">from</span> <span class="function">huggingface_hub</span> <span class="keyword">import</span> snapshot_download
+
+snapshot_download(
+    <span class="string">"McGill-NLP/A3-Synth"</span>,
+    repo_type=<span class="string">"dataset"</span>,
+    local_dir=<span class="string">"./data"</span>
+)</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RESOURCES ============ -->
+<section>
+  <div class="container-wide">
+    <div class="reveal">
+      <span class="section-label">Resources</span>
+      <h2>Everything you need</h2>
+    </div>
+
+    <div class="resource-grid reveal reveal-delay-1">
+      <a class="resource-card" href="https://arxiv.org/abs/TODO">
+        <span class="resource-icon">📄</span>
+        <span class="resource-title">Paper</span>
+        <p class="resource-desc">Full paper with framework details, ablations, and analysis</p>
+      </a>
+      <a class="resource-card" href="https://github.com/McGill-NLP/agent-as-annotators">
+        <span class="resource-icon">💾</span>
+        <span class="resource-title">Code</span>
+        <p class="resource-desc">Training, evaluation, and data generation pipeline</p>
+      </a>
+      <a class="resource-card" href="https://huggingface.co/datasets/McGill-NLP/A3-Synth">
+        <span class="resource-icon">🤗</span>
+        <span class="resource-title">A3-Synth Dataset</span>
+        <p class="resource-desc">16,353 training examples from 2,322 successful trajectories</p>
+      </a>
+      <a class="resource-card" href="https://huggingface.co/McGill-NLP/A3-Qwen3.5-9B">
+        <span class="resource-icon">🤖</span>
+        <span class="resource-title">A3-Qwen3.5-9B</span>
+        <p class="resource-desc">Best model. 41.5% WebArena, matches Qwen3.5-27B</p>
+      </a>
+      <a class="resource-card" href="https://huggingface.co/McGill-NLP/A3-Qwen3.5-4B">
+        <span class="resource-icon">🤖</span>
+        <span class="resource-title">A3-Qwen3.5-4B</span>
+        <p class="resource-desc">Compact variant. 35.2% WebArena</p>
+      </a>
+      <a class="resource-card" href="https://pypi.org/project/agent-as-annotators/">
+        <span class="resource-icon">📦</span>
+        <span class="resource-title">PyPI Package</span>
+        <p class="resource-desc">pip install agent-as-annotators</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<footer>
+  <p>Agent-as-Annotators &middot; <a href="https://mcgill-nlp.github.io">McGill NLP</a> &middot; <a href="https://mila.quebec">Mila</a></p>
+</footer>
+
+<script>
+// ---- Scroll reveal ----
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ---- Animated counters ----
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const el = e.target;
+      const target = parseFloat(el.dataset.count);
+      const prefix = el.dataset.prefix || '';
+      const rawStr = el.dataset.count;
+      const hasDecimal = rawStr.includes('.');
+      const isLargeInt = !hasDecimal && target >= 100;
+      const duration = 1800;
+      const start = performance.now();
+
+      const animate = (now) => {
+        const progress = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const current = target * ease;
+        el.textContent = prefix + (isLargeInt ? Math.floor(current).toLocaleString() : current.toFixed(1));
+        if (progress < 1) requestAnimationFrame(animate);
+      };
+      requestAnimationFrame(animate);
+      counterObserver.unobserve(el);
+    }
+  });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
+document.querySelectorAll('.result-counter').forEach(el => counterObserver.observe(el));
+
+// ---- Animate bars on scroll ----
+const barObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('.bar-fill').forEach((bar, i) => {
+        setTimeout(() => bar.classList.add('animated'), i * 120);
+      });
+      barObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('.bar-group').forEach(el => barObserver.observe(el));
+
+// ---- Copy bibtex ----
+function copyBibtex() {
+  const text = document.getElementById('bibtex').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+</script>
+</body>
+</html>
