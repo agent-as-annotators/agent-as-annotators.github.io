@@ -497,6 +497,197 @@ p strong {
 .bar-claude { background: #f97316; }
 .bar-gemini { background: #3b82f6; }
 
+/* ---- OOD interactive chart ---- */
+.ood-chart {
+  position: relative;
+  padding: 2rem 0 2rem 3.5rem;
+  margin-top: 1.5rem;
+}
+
+.ood-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.ood-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ood-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.ood-benchmarks {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 400px;
+  padding-top: 2.5rem;
+  border-bottom: 1px solid #e5e5e5;
+  border-left: 1px solid #e5e5e5;
+  position: relative;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 89px, #f0f0f0 89px, #f0f0f0 90px);
+}
+
+.ood-yaxis {
+  position: absolute;
+  left: 0;
+  top: 2rem;
+  bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4rem 0 0 0;
+  height: 400px;
+}
+
+.ood-yaxis span {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+  width: 3rem;
+  text-align: right;
+  padding-right: 0.5rem;
+  transform: translateY(50%);
+}
+
+.ood-group {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  flex: 1;
+}
+
+.ood-label {
+  margin-top: 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.3;
+  order: -1;
+}
+
+.ood-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 360px;
+}
+
+.ood-bar-wrap {
+  width: 42px;
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.ood-bar-wrap.ood-stacked {
+  position: relative;
+}
+
+.ood-bar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  height: calc(var(--h) * 4.2px);
+  transition: height 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.ood-bar-base {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  border-radius: 0;
+}
+
+.ood-bar-gain {
+  position: absolute;
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  bottom: calc(var(--bottom) * 4.2px);
+}
+
+.ood-val {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.5s 1s;
+}
+
+.ood-val-ours {
+  font-size: 0.88rem !important;
+}
+
+.ood-chart.animated .ood-val {
+  opacity: 1;
+}
+
+.ood-delta {
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 700;
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ood-bar-name {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: #92400e;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.ood-bar-wrap:hover .ood-bar-name {
+  opacity: 1;
+}
+
+.ood-bar-name-outside {
+  position: absolute;
+  font-size: 0.65rem;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.ood-bar-wrap:hover .ood-bar-name-outside {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .ood-bars { gap: 2px; }
+  .ood-bar-wrap { width: 28px; }
+  .ood-benchmarks { height: 250px; }
+  .ood-yaxis { height: 250px; }
+  .ood-bar { height: calc(var(--h) * 2.9px); }
+  .ood-bar-gain { bottom: calc(var(--bottom) * 2.9px); }
+}
+
 /* ---- Code blocks ---- */
 .code-block {
   background: var(--code-bg);
@@ -819,34 +1010,115 @@ footer a:hover { border-color: var(--accent); }
 
     <div class="reveal">
       <h3>Transfer to unseen benchmarks</h3>
-      <p>The model was trained only on WebArena environments, yet capabilities transfer broadly. Four out of five evaluation benchmarks are completely out-of-distribution.</p>
+      <p>The model was trained only on WebArena environments, yet capabilities transfer broadly. All four benchmarks below are completely out-of-distribution.</p>
     </div>
 
-    <div class="results-grid reveal reveal-delay-1">
-      <div class="result-card">
-        <div class="result-benchmark">WebArena</div>
-        <div class="result-score"><span class="result-counter" data-count="41.5">0</span><span>%</span></div>
-        <div class="result-delta">+10.5pp</div>
+    <div class="ood-chart reveal reveal-delay-1" id="ood-chart">
+      <div class="ood-legend">
+        <span class="ood-legend-item"><span class="ood-swatch" style="background:#fdba74;"></span>Best prev. open-weight (up to 72B)</span>
+        <span class="ood-legend-item"><span class="ood-swatch" style="background:#c4b5fd;"></span>Qwen3.5-9B (base)</span>
+        <span class="ood-legend-item"><span class="ood-swatch" style="background:#7c3aed;"></span>A3-Qwen3.5-9B (ours)</span>
+        <span class="ood-legend-item"><span class="ood-swatch" style="background:#a1a1aa;"></span>Qwen3.5-27B (3x larger)</span>
+        <span class="ood-legend-item"><span class="ood-swatch" style="background:#60a5fa;"></span>Gemini 3 Pro (teacher)</span>
       </div>
-      <div class="result-card">
-        <div class="result-benchmark">VisualWebArena <span class="ood-tag">OOD</span></div>
-        <div class="result-score"><span class="result-counter" data-count="33.9">0</span><span>%</span></div>
-        <div class="result-delta">+5.4pp</div>
+      <div class="ood-benchmarks">
+        <!-- VisualWebArena -->
+        <div class="ood-group">
+          <div class="ood-label">Visual<br>WebArena</div>
+          <div class="ood-bars">
+            <div class="ood-bar-wrap">
+              <div class="ood-bar" style="--h:0" data-h="16.7" data-color="#fdba74"><span class="ood-bar-name">Llama-3-70B</span></div>
+              <span class="ood-val" style="color:#c2410c">16.7%</span>
+            </div>
+            <div class="ood-bar-wrap ood-stacked">
+              <div class="ood-bar ood-bar-base" style="--h:0" data-h="28.5" data-color="#c4b5fd"></div>
+              <div class="ood-bar ood-bar-gain" style="--h:0;--bottom:0" data-h="5.4" data-bottom="28.5" data-color="#7c3aed"><span class="ood-delta">+5.4</span></div>
+              <span class="ood-val ood-val-ours" style="color:#7c3aed;font-weight:700">33.9%</span>
+            </div>
+            <div class="ood-bar-wrap">
+              <div class="ood-bar" style="--h:0" data-h="37.4" data-color="#a1a1aa"></div>
+              <span class="ood-val" style="color:#78788c">37.4%</span>
+            </div>
+            <div class="ood-bar-wrap">
+              <div class="ood-bar" style="--h:0" data-h="49.0" data-color="#60a5fa"></div>
+              <span class="ood-val" style="color:#4488cc">49.0%</span>
+            </div>
+          </div>
+        </div>
+        <!-- WorkArena -->
+        <div class="ood-group">
+          <div class="ood-label">WorkArena</div>
+          <div class="ood-bars">
+            <div class="ood-bar-wrap">
+              <div class="ood-bar" style="--h:0" data-h="38.5" data-color="#fdba74"><span class="ood-bar-name">GPT-oss-20B</span></div>
+              <span class="ood-val" style="color:#c2410c">38.5%</span>
+            </div>
+            <div class="ood-bar-wrap ood-stacked">
+              <div class="ood-bar ood-bar-base" style="--h:0" data-h="33.3" data-color="#c4b5fd"></div>
+              <div class="ood-bar ood-bar-gain" style="--h:0;--bottom:0" data-h="18.2" data-bottom="33.3" data-color="#7c3aed"><span class="ood-delta">+18.2</span></div>
+              <span class="ood-val ood-val-ours" style="color:#7c3aed;font-weight:700">51.5%</span>
+            </div>
+            <div class="ood-bar-wrap">
+              <div class="ood-bar" style="--h:0" data-h="57.0" data-color="#a1a1aa"></div>
+              <span class="ood-val" style="color:#78788c">57.0%</span>
+            </div>
+            <div class="ood-bar-wrap">
+              <div class="ood-bar" style="--h:0" data-h="79.7" data-color="#60a5fa"></div>
+              <span class="ood-val" style="color:#4488cc">79.7%</span>
+            </div>
+          </div>
+        </div>
+        <!-- WorkArena++ -->
+        <div class="ood-group">
+          <div class="ood-label">WorkArena++</div>
+          <div class="ood-bars">
+            <div class="ood-bar-wrap">
+              <div class="ood-bar" style="--h:0" data-h="2.98" data-color="#fdba74"></div>
+              <span class="ood-val" style="color:#c2410c">3.0%</span>
+              <span class="ood-bar-name-outside" style="color:#92400e">AgentTrek</span>
+            </div>
+            <div class="ood-bar-wrap ood-stacked">
+              <div class="ood-bar ood-bar-base" style="--h:0" data-h="2.2" data-color="#c4b5fd"></div>
+              <div class="ood-bar ood-bar-gain" style="--h:0;--bottom:0" data-h="7.5" data-bottom="2.2" data-color="#7c3aed"><span class="ood-delta">+7.5</span></div>
+              <span class="ood-val ood-val-ours" style="color:#7c3aed;font-weight:700">9.7%</span>
+            </div>
+            <div class="ood-bar-wrap">
+              <div class="ood-bar" style="--h:0" data-h="18.9" data-color="#a1a1aa"></div>
+              <span class="ood-val" style="color:#78788c">18.9%</span>
+            </div>
+            <div class="ood-bar-wrap">
+              <div class="ood-bar" style="--h:0" data-h="41.6" data-color="#60a5fa"></div>
+              <span class="ood-val" style="color:#4488cc">41.6%</span>
+            </div>
+          </div>
+        </div>
+        <!-- MiniWoB -->
+        <div class="ood-group">
+          <div class="ood-label">MiniWoB</div>
+          <div class="ood-bars">
+            <div class="ood-bar-wrap">
+              <div class="ood-bar" style="--h:0" data-h="64.2" data-color="#fdba74"><span class="ood-bar-name">OrbyAgent-72B</span></div>
+              <span class="ood-val" style="color:#c2410c">64.2%</span>
+            </div>
+            <div class="ood-bar-wrap ood-stacked">
+              <div class="ood-bar ood-bar-base" style="--h:0" data-h="63.2" data-color="#c4b5fd"></div>
+              <div class="ood-bar ood-bar-gain" style="--h:0;--bottom:0" data-h="5.8" data-bottom="63.2" data-color="#7c3aed"><span class="ood-delta">+5.8</span></div>
+              <span class="ood-val ood-val-ours" style="color:#7c3aed;font-weight:700">69.0%</span>
+            </div>
+            <div class="ood-bar-wrap">
+              <div class="ood-bar" style="--h:0" data-h="70.9" data-color="#a1a1aa"></div>
+              <span class="ood-val" style="color:#78788c">70.9%</span>
+            </div>
+            <div class="ood-bar-wrap">
+              <div class="ood-bar" style="--h:0" data-h="74.7" data-color="#60a5fa"></div>
+              <span class="ood-val" style="color:#4488cc">74.7%</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="result-card">
-        <div class="result-benchmark">WorkArena L1 <span class="ood-tag">OOD</span></div>
-        <div class="result-score"><span class="result-counter" data-count="51.5">0</span><span>%</span></div>
-        <div class="result-delta">+18.2pp</div>
-      </div>
-      <div class="result-card">
-        <div class="result-benchmark">WorkArena++ L2 <span class="ood-tag">OOD</span></div>
-        <div class="result-score"><span class="result-counter" data-count="9.7">0</span><span>%</span></div>
-        <div class="result-delta">+7.5pp</div>
-      </div>
-      <div class="result-card">
-        <div class="result-benchmark">MiniWoB <span class="ood-tag">OOD</span></div>
-        <div class="result-score"><span class="result-counter" data-count="69.0">0</span><span>%</span></div>
-        <div class="result-delta">+5.8pp</div>
+      <!-- Y axis -->
+      <div class="ood-yaxis">
+        <span>80%</span><span>60%</span><span>40%</span><span>20%</span><span>0%</span>
       </div>
     </div>
   </div>
@@ -881,7 +1153,7 @@ vllm serve McGill-NLP/A3-Qwen3.5-9B \
       <div class="code-block">
         <span class="code-label">bash</span>
         <code><span class="comment"># Evaluate on WebArena</span>
-python run_webarena.py \
+a3-eval \
   <span class="flag">--benchmark</span> webarena_test \
   <span class="flag">--model</span> A3-qwen3.5-9b</code>
       </div>
@@ -991,6 +1263,49 @@ const counterObserver = new IntersectionObserver((entries) => {
 
 document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
 document.querySelectorAll('.result-counter').forEach(el => counterObserver.observe(el));
+
+// ---- Animate OOD chart on scroll ----
+const oodObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const chart = e.target;
+      chart.classList.add('animated');
+      chart.querySelectorAll('.ood-bar').forEach((bar, i) => {
+        const h = bar.dataset.h;
+        const color = bar.dataset.color;
+        const bottom = bar.dataset.bottom;
+        setTimeout(() => {
+          bar.style.height = `calc(${h} * 4.2px)`;
+          bar.style.background = color;
+          if (bottom) bar.style.bottom = `calc(${bottom} * 4.2px)`;
+        }, i * 40);
+      });
+      // Position value labels above their bars
+      setTimeout(() => {
+        chart.querySelectorAll('.ood-bar-wrap').forEach(wrap => {
+          const val = wrap.querySelector('.ood-val');
+          if (!val) return;
+          // Find total bar height
+          const bars = wrap.querySelectorAll('.ood-bar');
+          let totalH = 0;
+          bars.forEach(b => {
+            const h = parseFloat(b.dataset.h || 0);
+            const bot = parseFloat(b.dataset.bottom || 0);
+            totalH = Math.max(totalH, h + bot);
+          });
+          val.style.bottom = `calc(${totalH} * 4.2px + 6px)`;
+
+          // Position name-outside too
+          const nameOut = wrap.querySelector('.ood-bar-name-outside');
+          if (nameOut) nameOut.style.bottom = `calc(${totalH} * 4.2px + 24px)`;
+        });
+      }, 200);
+      oodObserver.unobserve(chart);
+    }
+  });
+}, { threshold: 0.2 });
+
+document.querySelectorAll('.ood-chart').forEach(el => oodObserver.observe(el));
 
 // ---- Animate bars on scroll ----
 const barObserver = new IntersectionObserver((entries) => {
